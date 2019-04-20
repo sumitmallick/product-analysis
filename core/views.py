@@ -12,8 +12,8 @@ from bs4 import BeautifulSoup
 import requests
 from .models import Search, Product, Review
 from ast import literal_eval
-
-
+from .fusioncharts import FusionCharts
+from datetime import datetime
 
 
 class ABC(FormView):
@@ -171,7 +171,51 @@ def spider(request):
     
     return render(request, 'core/data.html', {'dta':dta} )
 
-        
+def graph(request):
+    query = request.GET.get('links')
+    qs = Product.objects.get(id=query)
+    starww5 = qs.star5
+    # print(type(starw5))
+    starw5 = starww5.replace(',' , '')
+    starw4 = qs.star4
+    starw3 = qs.star3 
+    starw2 = qs.star2
+    starw1 = qs.star1
+    
+    pie3d = FusionCharts("pie3d", "ex2" , "100%", "600", "chart-1", "json", 
+        { 
+            "chart": {
+                "caption": "Rating Distribution",
+                # "subCaption" : "from fl - updated -",
+                "showValues":"1",
+                "showPercentInTooltip" : "0",
+                "numberPrefix" : "count ",
+                "enableMultiSlicing":"1",
+                "theme": "fusion"
+            },
+            "data": [{
+                "label": "1 star",
+                "value": starw1
+            }, {
+                "label": "2 star",
+                "value": starw2
+            }, {
+                "label": "3 star",
+                "value": starw3
+            }, {
+                "label": "4 star",
+                "value": starw4
+            }, {
+                "label": "5 star",
+                "value": starw5
+            }]
+        })
+    context = {
+        'output' : pie3d.render(),
+        'chartTitle': 'Pie 3D Chart'
+    }
+    return render(request, 'core/graph.html', context)
+
 class SignUp(generic.CreateView):
     form_class = UserCreationForm
     success_url = reverse_lazy('login')

@@ -48,7 +48,7 @@
               <td>{{a.star3}}</td>
               <td>{{a.star2}}</td>
               <td>{{a.star1}}</td>
-            <td> <a href="#" >view graph</a></td>  
+            <td> <a href="{% url 'graph' %}?links={{ a.id|urlencode }}" >view graph</a></td>  
             </tr>
 
             {% endfor %}
