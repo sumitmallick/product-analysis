@@ -3,35 +3,54 @@
 
     <!-- Compiled and minified JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-         
+   
+       
 
 <div class="box">
         <div class="box-header">
           <h3 class="box-title">Product Comparison</h3>
+          <a href="{% url 'abc' %}">HOME</a>  
         </div>
         <div class="box-body">
           <table id="example1" class="table table-bordered table-striped">
             <thead>
             <tr>
-              <th>Product Name</th>
+              <th>product Name</th>
+              <th>URL</th>
               <th>Price</th>
-              <th>Category</th>
               <th>Specifications</th>
-              <th>Rating</th>
-              <th>Reviews</th>
               
+              
+              <th>Rating</th> 
+              <th>no_reviews</th> 
+              <th>star5</th>
+              <th>star4</th>
+              <th>star3</th>
+              <th>star2</th>
+              <th>star1</th>
+                <th>click</th>
             </tr>
+            
             </thead>
             <tbody>
             {% for a in dta %}
+            
             <tr>
+             
               <td>{{a.product_name}}</td>
+              <td><a href="{{a.url}}"></a>{{a.url}}</td>
               <td>{{a.price}}</td>
-              <td>{{a.category}}</td>
-              <td>{{a.specifications</td>
-              <td>{{a.Rating}}</td>
-              <td>{{a.Reviews}}</td>
+              <td>{{a.specifications}}</td>
+              <td>{{a.rating}}</td>
+              <td>{{a.no_reviews}}</td>
+              <td>{{a.star5}}</td>
+              <td>{{a.star4}}</td>
+              <td>{{a.star3}}</td>
+              <td>{{a.star2}}</td>
+              <td>{{a.star1}}</td>
+            <td> <a href="#" >view graph</a></td>  
             </tr>
+
             {% endfor %}
             </tbody>
           </table>

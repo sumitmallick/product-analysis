@@ -10,7 +10,7 @@ from lxml.html import fromstring
 from requests import get
 from bs4 import BeautifulSoup
 import requests
-from .models import Search, Product
+from .models import Search, Product, Review
 from ast import literal_eval
 
 
@@ -36,7 +36,7 @@ class ABC(FormView):
             if url.startswith("/url?"):
                 url = parse_qs(urlparse(url).query)['q']
                 a = url[0]
-                sites = ['amazon', 'flipkart']
+                sites = ['amazon.in', 'flipkart.com']
                 allinks.append(a)
                 aallinks = [i for e in sites for i in allinks if e in i]
         data = {
@@ -51,7 +51,7 @@ class ABC(FormView):
 
 def spider(request):
     query = request.GET.get('links')
-    qs = Search.objects.get(squery=query)
+    qs = Search.objects.filter(squery=query).latest("squery")
     a = qs.urls
     b = literal_eval(a)
     print(a)
@@ -80,18 +80,96 @@ def spider(request):
 
         if soup.find('div', attrs={"class":"MocXoX"}) is not None:
             specifications = (soup.find('div', attrs={"class":"MocXoX"})).text #flipkart
-        elif soup.find('span', attrs={"id":"priceblock_ourprice"}) is not None:
-            price = (soup.find('span', attrs={"class":"a-size-medium a-color-price priceBlockBuyingPriceString"})).text  #amazon
-        elif soup.find('span', attrs={"class":"a-color-price"}) is not None:
-            price = (soup.find('span', attrs={"class":"a-color-price"})).text # Amazon
+        elif soup.find('div', attrs={"class":"section techD"}) is not None:
+            specifications = (soup.find('div', attrs={"class":"section techD"})).text  #amazon
+        #elif soup.find('div', attrs={"class":"section techD"}) is not None:
+        #    specifications = (soup.find('span', attrs={"class":"section techD"})).text # Amazon
         else:
-            price = " "
+            specifications = " "
         
-        context = {'search':qs,'product_name': name , 'price': price}
+
+        if soup.find('div', attrs={"class":"_1i0wk8"}) is not None:
+           rating = (soup.find('div', attrs={"class":"_1i0wk8"})).text # flipkart
+        elif soup.find('span', attrs={"class":"arp-rating-out-of-text a-color-base"}) is not None:
+           rating = (soup.find('span', attrs={"class":"arp-rating-out-of-text a-color-base"})).text # Amazo
+        else:
+           rating = " "
+
+        if soup.find('span', attrs={"class":"_38sUEc"}) is not None:
+           no_reviews = (soup.find('span', attrs={"class":"_38sUEc"})).text # flipkart
+        elif soup.find('h2', attrs={"data-hook":"total-review-count"}) is not None:
+           no_reviews = (soup.find('h2', attrs={"data-hook":"total-review-count"})).text # Amazo
+        else:
+           no_reviews = " "
+
+########################## star code
+        if soup.find_all('div', attrs={"class":"CamDho"}):
+           stard = soup.find_all('div', attrs={"class":"CamDho"}) # flipkart
+           print(stard)
+           print(type(stard))
+           star5 = (stard[0]).text
+           print(star5)
+        elif soup.find('a', attrs={"class": "a-size-base a-link-normal 5star histogram-review-count a-color-secondary"})is not None:
+            star5 = (soup.find('a', attrs={"class": "a-size-base a-link-normal 5star histogram-review-count a-color-secondary"})).text #amazon
+        else:
+            star5 = None
+
+        if soup.find_all('div', attrs={"class":"CamDho"}):
+           starf = soup.find_all('div', attrs={"class":"CamDho"}) # flipkart
+           star4 = (starf[1]).text
+        elif soup.find('a', attrs={'class': 'a-size-base a-link-normal 4star histogram-review-count a-color-secondary'})is not None: 
+            star4 = (soup.find('a', attrs={'class': 'a-size-base a-link-normal 4star histogram-review-count a-color-secondary'})).text #amazon
+        else:
+            star4 = None
+
+        if soup.find_all('div', attrs={"class":"CamDho"}):
+           starg = (soup.find_all('div', attrs={"class":"CamDho"})) # flipkart
+           star3 = (starg[2]).text
+        elif soup.find('a', attrs={'class': 'a-size-base a-link-normal 3star histogram-review-count a-color-secondary'})is not None:
+            star3 = (soup.find('a', attrs={'class': 'a-size-base a-link-normal 3star histogram-review-count a-color-secondary'})).text #amazon
+        else:
+            star3 = None
+        
+
+        if soup.find_all('div', attrs={"class":"CamDho"}):
+           starj = soup.find_all('div', attrs={"class":"CamDho"}) # flipkart
+           star2 = (starj[3]).text
+        elif soup.find('a', attrs={'class': 'a-size-base a-link-normal 2star histogram-review-count a-color-secondary'})is not None:
+            star2 = (soup.find('a', attrs={'class': 'a-size-base a-link-normal 2star histogram-review-count a-color-secondary'})).text #amazon
+        else:
+            star2 = None
+
+
+        if soup.find_all('div', attrs={"class":"CamDho"}):
+           stark = soup.find_all('div', attrs={"class":"CamDho"}) # flipkart
+           star1 = (stark[4]).text
+        elif soup.find('a', attrs={'class': 'a-size-base a-link-normal 1star histogram-review-count a-color-secondary'})is not None:
+            star1 = (soup.find('a', attrs={'class': 'a-size-base a-link-normal 1star histogram-review-count a-color-secondary'})).text #amazon
+        else:
+            star1 = None
+
+
+       
+        context = {"url":links,
+                    'rating': rating,
+                    'no_reviews': no_reviews,
+                    'star5': star5,
+                    'star4': star4,
+                    'star3': star3,
+                    'star2':star2,
+                    'star1':star1,
+                    'search':qs,
+                    'product_name': name ,
+                    'price': price ,
+                    'specifications': specifications}
+        
+        # print(context)
         Product.objects.update_or_create(**context)
+       
         
         dta = Product.objects.filter(search=qs)
-    return render(request, 'core/data.html', {'dta':dta})
+    
+    return render(request, 'core/data.html', {'dta':dta} )
 
         
 class SignUp(generic.CreateView):
